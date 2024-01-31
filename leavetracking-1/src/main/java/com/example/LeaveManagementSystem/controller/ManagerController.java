@@ -107,7 +107,7 @@ public class ManagerController {
             
             LeaveApplicationStatusDto leave = managerLeaveApplicationService.getLeaveApplicationById(managerId, employeeId, leaveId);
             
-            // Construct the BackendResponse with the leave application
+           
             response.setMessage("Leave application fetched successfully");
             response.setStatus("success");
             response.setData(leave);
@@ -127,7 +127,6 @@ public class ManagerController {
     
  
     // Api to approve/reject leave for an employee
-    //status approve or reject decided by LeaveApplication fields if any one of them empty makes it rejected
     
     @PutMapping("{managerId}/leaves/{employeeId}/checkLeave/{leaveId}")
     public ResponseEntity<BackendResponse> approveLeave(

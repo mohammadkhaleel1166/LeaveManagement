@@ -41,7 +41,7 @@ public class EmployeeLeaveApplicationServiceImpl implements EmployeeLeaveApplica
     @Override
     public LeaveApplicationStatusDto applyForLeave(Long employeeId, LeaveApplicationDto leaveApplicationDto) {
         logger.info("Applying for leave - Employee ID: {}, Leave Application DTO: {}", employeeId, leaveApplicationDto);
-
+   //checking for employee present or not in db
         Users employee = userRepo.findById(employeeId).orElseThrow(
                 () -> new UserNotFound(String.format("Employee with ID %d not found", employeeId)));
 

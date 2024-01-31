@@ -31,15 +31,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createEmployee(UserDto userDto) {
         logger.info("Creating employee: {}", userDto);
-        //userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        
         
         if (!userDto.getPassword().isEmpty()) {
             userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
         } else {
-            // Handle the situation where the password field is empty
+           
             logger.warn("Password field is empty. Please provide a valid password.");
-            // You can throw an exception, return an error response, or handle it based on your application requirements
-        }
+             }
         
         Users employee = modelMapper.map(userDto, Users.class);
         employee.setRole(Role.EMPLOYEE);

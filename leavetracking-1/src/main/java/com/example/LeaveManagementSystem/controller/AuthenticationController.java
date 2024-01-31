@@ -49,7 +49,9 @@ public class AuthenticationController {
     
     @PostMapping("/register/employee")
     public ResponseEntity<BackendResponse> createUserEmployee(@RequestBody UserDto userDto){
-    	BackendResponse response=new BackendResponse();  	
+    	BackendResponse response=new BackendResponse();  
+    	
+    	//checking the fields are empty
 if (userDto == null || userDto.getName() == null || userDto.getName().isEmpty() || userDto.getEmail() == null ||  userDto.getEmail().isEmpty()|| userDto.getPassword() == null ||  userDto.getPassword().isEmpty())
 {
 
@@ -69,14 +71,14 @@ if (userDto == null || userDto.getName() == null || userDto.getName().isEmpty() 
                 response.setData("empty");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 }
-
+//checking that the user exists already
 if (userService.isUserWithEmailExists(userDto.getEmail())) {
     response.setMessage("Email already exists");
     response.setStatus("fail");
     response.setData("empty");
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 }
-      
+      //if no email is present in db then create a employee
         UserDto createdEmployee = userService.createEmployee(userDto);
         logger.info("Employee registration successful: {}", createdEmployee);
         response.setMessage("registration successful");
@@ -96,7 +98,7 @@ if (userService.isUserWithEmailExists(userDto.getEmail())) {
 
 if (userDto == null || userDto.getName() == null || userDto.getName().isEmpty() || userDto.getEmail() == null ||  userDto.getEmail().isEmpty()|| userDto.getPassword() == null ||  userDto.getPassword().isEmpty())
 {
-
+//checking all the fields are present or not
  StringBuilder errorMessage = new StringBuilder("Fields ");
                 if (userDto.getName() == null || userDto.getName().isEmpty()) {
                     errorMessage.append("'name', ");
@@ -113,6 +115,7 @@ if (userDto == null || userDto.getName() == null || userDto.getName().isEmpty() 
                 response.setData("empty");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 }
+//checking if email already exist in db
 
 if (userService.isUserWithEmailExists(userDto.getEmail())) {
     response.setMessage("Email already exists");
@@ -135,6 +138,7 @@ if (userService.isUserWithEmailExists(userDto.getEmail())) {
     @PostMapping("/login")
     public ResponseEntity<BackendResponse> loginUser(@RequestBody LoginDto loginDto) {
         BackendResponse response = new BackendResponse();
+        //checking for the fields if any are empty
 
         try {
            

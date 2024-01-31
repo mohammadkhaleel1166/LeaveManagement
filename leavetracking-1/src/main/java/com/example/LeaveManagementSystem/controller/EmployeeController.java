@@ -101,6 +101,8 @@ public class EmployeeController {
             Authentication authentication
             ){
         BackendResponse response = new BackendResponse();
+        
+       
 
         try {
             String loggedMail = authentication.getName();
