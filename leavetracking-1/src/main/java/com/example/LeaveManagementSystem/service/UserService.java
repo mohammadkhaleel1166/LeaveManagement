@@ -5,4 +5,6 @@ import com.example.LeaveManagementSystem.payload.UserDto;
 public interface UserService {
 	
 	public  UserDto createEmployee(UserDto userDto);
+
+	public boolean isUserWithEmailExists(String email);
 }

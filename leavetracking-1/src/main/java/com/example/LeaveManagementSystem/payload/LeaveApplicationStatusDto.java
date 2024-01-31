@@ -22,7 +22,7 @@ public class LeaveApplicationStatusDto {
 	private LocalDate endDate;
 	private String reason;
 	private LeaveStatus status;
-	private  String managerComment;
-	private Users employee;
+	private  String comment;
+	private Long employeeId;
 	
 }

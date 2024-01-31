@@ -70,8 +70,9 @@ public class EmployeeLeaveApplicationServiceImpl implements EmployeeLeaveApplica
                 .orElseThrow(() -> new LeaveNotFound(String.format(
                         "Leave application with ID %d for employee ID %d not found", leaveApplicationId, employeeId)));
 
-      
-        return convertToDto(leavesApplication);
+      LeaveApplicationStatusDto leaveApplicationStatusDto=convertToDto(leavesApplication);
+     leaveApplicationStatusDto.setEmployeeId(employeeId);
+        return leaveApplicationStatusDto ;
     }
 
     private LeaveApplicationStatusDto convertToDto(LeaveApplication leaveApplication) {

@@ -1,9 +1,6 @@
 package com.example.LeaveManagementSystem.payload;
 
-import java.time.LocalDate;
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,10 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+public class LeaveStatusUpdate {
+	
+  private String comment;
+  private boolean status;
 
-public class LeaveApplicationDto {
-	private Long id;
-	private LocalDate startDate;
-	private LocalDate endDate;
-	private String reason;
 }

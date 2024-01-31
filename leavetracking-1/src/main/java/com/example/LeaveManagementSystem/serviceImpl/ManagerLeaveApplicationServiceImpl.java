@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 
 import com.example.LeaveManagementSystem.entity.LeaveApplication;
 import com.example.LeaveManagementSystem.entity.Users;
+import com.example.LeaveManagementSystem.exception.APIException;
 import com.example.LeaveManagementSystem.exception.LeaveNotFound;
 import com.example.LeaveManagementSystem.exception.UserNotFound;
 import com.example.LeaveManagementSystem.payload.LeaveApplicationStatusDto;
 import com.example.LeaveManagementSystem.payload.LeaveStatus;
+import com.example.LeaveManagementSystem.payload.LeaveStatusUpdate;
 import com.example.LeaveManagementSystem.repository.LeaveApplicationRepository;
 import com.example.LeaveManagementSystem.repository.UserRepository;
 import com.example.LeaveManagementSystem.service.ManagerLeaveApplicationService;
@@ -49,7 +51,7 @@ public class ManagerLeaveApplicationServiceImpl implements ManagerLeaveApplicati
 
         logger.info("Retrieved {} leave applications for managerId: {}",
                 leaveApplicationStatusDtos.size(), managerId);
-
+        
         return leaveApplicationStatusDtos;
     }
     
@@ -80,38 +82,94 @@ public class ManagerLeaveApplicationServiceImpl implements ManagerLeaveApplicati
     
     
     @Override
-    public LeaveApplicationStatusDto updateLeaveApplication(Long managerId, Long employeeId, Long leaveApplicationId,String managerComment) {
-       
-        LeaveApplication leaveApplication = leaveApplicationRepo.findByIdAndEmployeeId(leaveApplicationId, employeeId)
-                .orElseThrow(() -> new LeaveNotFound(String.format(
-                        "Leave application with id %d for employee id %d not found", leaveApplicationId, employeeId)));
-     
-        if (leaveApplication.getStatus() == LeaveStatus.PENDING) {
-            // Check the required fields (startDate, endDate, reason) are filled
-            if (leaveApplication.getStartDate() == null || leaveApplication.getEndDate() == null
-                    || leaveApplication.getReason().trim().isEmpty()) {
-                leaveApplication.setStatus(LeaveStatus.REJECTED);
-            } else {
-                leaveApplication.setStatus(LeaveStatus.APPROVED);
+    public LeaveApplicationStatusDto updateLeaveApplication(Long managerId, Long employeeId, Long leaveApplicationId, LeaveStatusUpdate leaveStatusUpdate) {
+
+        try {
+
+            // Fetch the leave application by its ID and employee ID
+
+            LeaveApplication leaveApplication = leaveApplicationRepo.findByIdAndEmployeeId(leaveApplicationId, employeeId)
+
+                    .orElseThrow(() -> new LeaveNotFound(String.format(
+
+                            "Leave application with id %d for employee id %d not found", leaveApplicationId, employeeId)));
+
+
+
+            if (leaveApplication.getStatus() == LeaveStatus.PENDING) {
+
+                if (leaveStatusUpdate.isStatus()) {
+
+                    // Update leave application status to APPROVED
+
+                    leaveApplication.setComment(leaveStatusUpdate.getComment());
+
+                    leaveApplication.setStatus(LeaveStatus.APPROVED);
+                }
+    
+            else {
+
+                    // Update leave application status to REJECTED
+
+                    leaveApplication.setComment(leaveStatusUpdate.getComment());
+
+                    leaveApplication.setStatus(LeaveStatus.REJECTED);
+
+                }
+
+
+
+                // Save the updated leave application
+
+                LeaveApplication savedLeaveApplication = leaveApplicationRepo.save(leaveApplication);
+
+
+
+                // Convert the saved leave application to DTO
+
+                LeaveApplicationStatusDto leaveApplicationStatusDto = convertToUpdateLeaveDto(savedLeaveApplication);
+
+
+
+                logger.info("Updated leave application status. Leave application ID: {}, Manager ID: {}, Employee ID: {}",
+
+                        leaveApplicationId, managerId, employeeId);
+
+
+
+                return leaveApplicationStatusDto;
+
             }
-            leaveApplication.setManagerComment(managerComment);
-          
-            LeaveApplication savedLeaveApplication = leaveApplicationRepo.save(leaveApplication);
 
-            LeaveApplicationStatusDto updatedLeaveApplicationStatusDto = convertToDto(savedLeaveApplication);
 
-            logger.info("Updated leave application status. Leave application ID: {}, Manager ID: {}, Employee ID: {}",
-                    leaveApplicationId, managerId, employeeId,managerComment);
 
-            return updatedLeaveApplicationStatusDto;
+            // If the leave application is not in a pending state, return the updated status
+
+            return convertToUpdateLeaveDto(leaveApplication);
+
+        } catch (Exception e) {
+
+            logger.error("Error while updating leave application status for manager and employee", e);
+
+            throw new APIException(e.getMessage());
+
         }
 
-        return convertToDto(leaveApplication);
+    }
+    
+    private  LeaveApplicationStatusDto convertToUpdateLeaveDto(LeaveApplication leaveApplication)
+    {
+    	return modelMapper.map(leaveApplication,LeaveApplicationStatusDto.class);
     }
 
     
     private LeaveApplicationStatusDto convertToDto(LeaveApplication leaveApplication) {
-        return modelMapper.map(leaveApplication, LeaveApplicationStatusDto.class);
+    	
+    	Long employeeId=leaveApplication.getEmployee().getId();
+    	
+    	LeaveApplicationStatusDto leaveApplicationStatusDto=modelMapper.map(leaveApplication, LeaveApplicationStatusDto.class);
+    	leaveApplicationStatusDto.setEmployeeId(employeeId);
+        return leaveApplicationStatusDto;
     }
 
 	@Override

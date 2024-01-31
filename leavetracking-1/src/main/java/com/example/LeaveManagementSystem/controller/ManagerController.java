@@ -18,8 +18,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.LeaveManagementSystem.entity.LeaveApplication;
+import com.example.LeaveManagementSystem.payload.BackendResponse;
 import com.example.LeaveManagementSystem.payload.LeaveApplicationDto;
 import com.example.LeaveManagementSystem.payload.LeaveApplicationStatusDto;
+import com.example.LeaveManagementSystem.payload.LeaveStatusUpdate;
 import com.example.LeaveManagementSystem.service.EmployeeLeaveApplicationService;
 import com.example.LeaveManagementSystem.service.ManagerLeaveApplicationService;
 
@@ -40,100 +42,136 @@ public class ManagerController {
     
     // Api to get all leave applications
     
-    
+
     @GetMapping("{managerId}/leaves")
-    public ResponseEntity<List<LeaveApplicationStatusDto>> getAllLeaves(
+    public ResponseEntity<BackendResponse> getAllLeaves(
             @PathVariable(name="managerId") Long managerId,
-            Authentication authentication
-    ){
-    	try {
-    		
-    		String loggedMail=authentication.getName();
-        	
-        	Long loggedId=managerLeaveApplicationService.getUserIdByEmail(loggedMail);
-        	
-        	if(!loggedId.equals(managerId)) {
-        		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        	}
-        	
+            Authentication authentication){
+        BackendResponse response = new BackendResponse();
+
+        try {
+            String loggedMail = authentication.getName();
+            
+            Long loggedId = managerLeaveApplicationService.getUserIdByEmail(loggedMail);
+            
+            if (!loggedId.equals(managerId)) {
+                response.setMessage("Unauthorized access");
+                response.setStatus("fail");
+                response.setData("empty");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
+            
             logger.info("Fetching all leave applications for managerId: {}", managerId);
             List<LeaveApplicationStatusDto> allLeaves = managerLeaveApplicationService.getAllLeaveApplications(managerId);
             logger.info("Fetched {} leave applications successfully", allLeaves.size());
             
-            return new ResponseEntity<>(allLeaves, HttpStatus.OK);
+            response.setMessage("Leave applications fetched successfully");
+            response.setStatus("success");
+            response.setData(allLeaves);
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error while fetching leave applications", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.setMessage("An error occurred while fetching leave applications");
+            response.setStatus("fail");
+            response.setData("empty");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-    
+
     
     // Api to get a specific leave application for an employee 
     
     
     @GetMapping("{managerId}/leaves/{employeeId}/leave/{leaveId}")
-    public ResponseEntity<LeaveApplicationStatusDto> getLeave(
+    public ResponseEntity<BackendResponse> getLeave(
             @PathVariable(name="managerId") Long managerId,
             @PathVariable(name="employeeId") Long employeeId,
             @PathVariable(name="leaveId") Long leaveId,
-            Authentication authentication
-    ){
-    	try {
-    		
-    		String loggedMail=authentication.getName();
-        	
-        	Long loggedId=managerLeaveApplicationService.getUserIdByEmail(loggedMail);
-        	
-        	if(!loggedId.equals(managerId)) {
-        		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        	}
+            Authentication authentication){
+        BackendResponse response = new BackendResponse();
+
+        try {
+            String loggedMail = authentication.getName();
+            
+            Long loggedId = managerLeaveApplicationService.getUserIdByEmail(loggedMail);
+            
+            if (!loggedId.equals(managerId)) {
+                response.setMessage("Unauthorized access");
+                response.setStatus("fail");
+                response.setData("empty");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
            
-    		logger.info("Fetching leave application with id {} for managerId: {} and employeeId: {}", leaveId, managerId, employeeId);
-    		
-    		
+            logger.info("Fetching leave application with id {} for managerId: {} and employeeId: {}", leaveId, managerId, employeeId);
+            
             LeaveApplicationStatusDto leave = managerLeaveApplicationService.getLeaveApplicationById(managerId, employeeId, leaveId);
+            
+            // Construct the BackendResponse with the leave application
+            response.setMessage("Leave application fetched successfully");
+            response.setStatus("success");
+            response.setData(leave);
+            
             logger.info("Fetched leave application successfully");
-            return new ResponseEntity<>(leave, HttpStatus.OK);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Error while fetching leave application", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.setMessage("An error occurred while fetching leave application");
+            response.setStatus("fail");
+            response.setData("empty");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
     
     
  
     // Api to approve/reject leave for an employee
     //status approve or reject decided by LeaveApplication fields if any one of them empty makes it rejected
     
-    
     @PutMapping("{managerId}/leaves/{employeeId}/checkLeave/{leaveId}")
-    public ResponseEntity<LeaveApplicationStatusDto> approveLeave(
+    public ResponseEntity<BackendResponse> approveLeave(
             @PathVariable(name="managerId") Long managerId,
             @PathVariable(name="employeeId") Long employeeId,
             @PathVariable(name="leaveId") Long leaveId,
-            @RequestBody String managerComment,
+            @RequestBody LeaveStatusUpdate leaveStatusUpdate,
             Authentication authentication
     ) {
-    	try {
-    		
-    		String loggedMail=authentication.getName();
-        	
-        	Long loggedId=managerLeaveApplicationService.getUserIdByEmail(loggedMail);
-        	
-        	if(!loggedId.equals(managerId)) {
-        		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        	}
-           
-    		logger.info("Approving leave application with id {} for managerId: {} and employeeId: {}", leaveId, managerId, employeeId);
-           
-            LeaveApplicationStatusDto approvedLeave = managerLeaveApplicationService.updateLeaveApplication(managerId, employeeId, leaveId,managerComment);
+        BackendResponse response = new BackendResponse();
 
-            logger.info("Leave application approved successfully");
+        try {
+            String loggedMail = authentication.getName();
+            
+            Long loggedId = managerLeaveApplicationService.getUserIdByEmail(loggedMail);
+            
+            if (!loggedId.equals(managerId)) {
+                response.setMessage("Unauthorized access");
+                response.setStatus("fail");
+                response.setData("empty");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            }
            
-            return new ResponseEntity<>(approvedLeave, HttpStatus.OK);
-    	}catch (Exception e) {
+            logger.info("Approving leave application with id {} for managerId: {} and employeeId: {}", leaveId, managerId, employeeId);
+            
+            LeaveApplicationStatusDto approvedLeave = managerLeaveApplicationService.updateLeaveApplication(managerId, employeeId, leaveId, leaveStatusUpdate);
+            
+           
+            response.setMessage("Leave application approved successfully");
+            response.setStatus("success");
+            response.setData(approvedLeave);
+            
+            logger.info("Leave application approved successfully");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
             logger.error("Error while approving leave application", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.setMessage("An error occurred while approving leave application");
+            response.setStatus("fail");
+            response.setData("empty");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    
+
+    
 }
